@@ -578,14 +578,25 @@ hidden_states
     ↓
 [Gate+Up GEMM] → gate_up_parallel (每个rank计算部分)
     ↓
-[All-Gather] → gate_up_full (收集所有rank)
-    ↓
-[SiLU激活] → intermediate
+[SiLU激活] → intermediate_parallel（保持TP分片）
     ↓
 [Down GEMM] → output_parallel (每个rank计算部分)
     ↓
-[All-Reduce] → output (聚合所有rank)
+[条件通信]
+  ├─ 默认路径：All-Reduce → output (聚合所有rank)
+  └─ 优化路径：跳过此处All-Reduce，交由后续reduce-scatter/层间通信处理
 ```
+
+**关键点**：`Gate+Up` 之后默认不会做 all-gather，而是保持 TP 分片数据直接进入激活与 `Down` 投影。
+
+**`use_reduce_scatter` / `skip_all_reduce` 对通信行为的影响**：
+
+- `LlamaMLP.forward(..., use_reduce_scatter=False)`（默认）
+  - 调用 `down_proj(x, skip_all_reduce=False)`。
+  - 若 `tp_size > 1` 且 `reduce_results=True`，`RowParallelLinear` 在 `down_proj` 内执行 all-reduce，得到聚合后的完整输出。
+- `LlamaMLP.forward(..., use_reduce_scatter=True)`
+  - 调用 `down_proj(x, skip_all_reduce=True)`。
+  - `down_proj` 跳过本层 all-reduce，输出保持为 rank-local 分片结果，后续由 `LayerCommunicator` 的 `postprocess_layer` 走条件性通信（例如 reduce-scatter 路径）完成跨卡数据重分布/聚合。
 
 ### 5.5 LayerCommunicator优化通信
 
