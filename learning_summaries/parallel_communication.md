@@ -434,10 +434,12 @@ class VocabParallelEmbedding(torch.nn.Module):
         )
 ```
 
-**通信特点**：
-- **无通信**：Embedding层本身不需要通信，每个rank只负责vocab的一部分
-- **权重切分**：vocab_size被切分到不同TP rank
-- **输入广播**：input_ids在所有rank上相同
+**通信特点（条件化）**：
+- **有 TP 分片时（`tp_size > 1`）**：先按本 rank 的 vocab 范围构造 `masked_input/input_mask`，执行本地 embedding lookup，并对越界 token 的输出位置做 mask（置 0）。
+- **仅在非 `input_scattered` 路径聚合**：当 `tp_size > 1` 且 `not get_attn_tp_context().input_scattered` 时，才会执行 all-reduce 聚合（`use_attn_tp_group=True` 走 `attn_tp_all_reduce`，否则走 `tensor_model_parallel_all_reduce`）。
+- **“无额外通信”仅在特定分支成立**：例如 `tp_size == 1`（无 TP 切分）或 `input_scattered=True`（跳过这里的 all-reduce）时，可视为该层不引入额外 all-reduce。
+- **权重切分**：vocab_size 在 TP 维度切分到不同 rank。
+- **输入形态**：通常各 rank 拿到同一批 input_ids，但是否需要在 embedding 层做 all-reduce 由 `input_scattered` 分支决定。
 
 ### 5.2 Attention层通信
 
