@@ -191,7 +191,7 @@ class DeepEPDispatcher(BaseDispatcher):
 |------|---------|------|
 | **Normal模式** | Prefill阶段，大批量tokens | 使用NVLink/RDMA优化，吞吐量优先 |
 | **Low Latency模式** | Decode阶段，小批量tokens | 优化延迟，适合实时推理 |
-| **AUTO模式** | 自动选择 | 根据batch size自动选择模式 |
+| **AUTO模式** | 自动选择 | 根据 `is_extend_in_batch` 语义选择（extend/prefill 倾向 NORMAL，decode 倾向 LOW_LATENCY） |
 
 ### 3.3 Normal模式通信流程
 
@@ -975,7 +975,7 @@ SGLang的MoE DeepEP并行策略和通信流程具有以下特点：
 - **多种通信原语**：All-Gather、All-Reduce、Reduce-Scatter等
 - **多种通信后端**：Custom AllReduce、Quick AllReduce、PyMSCCL++、Torch Symmetric Memory
 - **DeepEP优化**：NVLink、RDMA、FP8量化、异步通信
-- **模式自适应**：根据batch size自动选择Normal或Low Latency模式
+- **模式自适应**：根据 `is_extend_in_batch` 语义选择（extend/prefill 倾向 NORMAL，decode 倾向 LOW_LATENCY）
 
 ### 9.3 计算通信重叠
 
