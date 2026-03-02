@@ -40,6 +40,17 @@
 | TokenToKVPoolAllocator | 索引管理 | Token |
 | KVCache | 物理存储 | KV Cache Block |
 
+
+### 1.3 池类型分层（代码实现）
+
+- 映射层：`ReqToTokenPool`（请求槽位到 token 索引映射）
+- 分配层：`TokenToKVPoolAllocator`（统一分配/释放接口）
+- 物理层：
+  - `MHATokenToKVPool` / `MHATokenToKVPoolFP4`
+  - `MLATokenToKVPool` / `MLATokenToKVPoolFP4`
+
+这样可以把“调度级索引管理”和“注意力后端的物理缓存布局”解耦。
+
 ---
 
 ## 二、ReqToTokenPool

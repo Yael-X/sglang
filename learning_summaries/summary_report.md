@@ -41,7 +41,7 @@
 │  - gen(), select(), fork/join          │
 │  - Interpreter & Compiler              │
 └──────────────┬──────────────────────────┘
-               │ Internal Graph Dispatch
+               │ Frontend SDK / API Call
                ▼
 ┌─────────────────────────────────────────┐
 │     2. SGLang Runtime (运行时层)        │
@@ -65,7 +65,7 @@
 ```
 请求到达 → Scheduler 接收
     │
-    ├─→ RadixCache.match_prefix() 查找前缀
+    ├─→ PrefixCache.match_prefix() 查找前缀（常见实现为 Radix）
     │   ├─ 命中 → 复用 KV Cache
     │   └─ 未命中 → 重新计算
     │

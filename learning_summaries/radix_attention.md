@@ -69,7 +69,7 @@ class TreeNode:
 class RadixCache(BasePrefixCache):
     root_node: TreeNode           # 根节点
     page_size: int                # 分页大小 (1 或多 token)
-    eviction_policy: str          # 淘汰策略 (lru/lfu/priority)
+    eviction_policy: str          # 淘汰策略 (lru/lfu/fifo/mru/filo/priority)
     evictable_leaves: Set[TreeNode]  # 可淘汰叶节点集合
     evictable_size_: int          # 可淘汰 token 数
     protected_size_: int          # 受保护 token 数 (lock_ref > 0)
@@ -249,6 +249,8 @@ def evict(self, params: EvictParams) -> EvictResult:
 | LRU | `last_access_time` | 通用 |
 | LFU | `hit_count` | 高频重复 |
 | FIFO | `creation_time` | 简单快速 |
+| MRU | `last_access_time`（反向） | 反局部性 workload |
+| FILO | `creation_time`（反向） | 栈式访问模式 |
 | Priority | `priority` | 请求优先级感知 |
 
 ---

@@ -67,7 +67,7 @@ flowchart TB
     end
 
     %% ================= 跨层级连线 =================
-    Compiler == "内部计算图下发" ==> APIGateway
+    Compiler == "Frontend SDK / Client 调用" ==> APIGateway
     Compiler -. "旁路调用API" .-> ExternalAPI
     Engine == "物理计算指令下发" ==> GPU
 
