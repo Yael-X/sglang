@@ -24,7 +24,7 @@ Scheduler 是 SGLang Runtime 的**核心大脑**，负责：
 │         SGLang Frontend                 │
 │  (gen(), select(), fork/join...)        │
 └──────────────┬──────────────────────────┘
-               │ Internal Graph Dispatch
+               │ Frontend SDK / API Call
                ▼
 ┌─────────────────────────────────────────┐
 │    API Gateway → Scheduler ⭐           │ ← 本模块
@@ -34,7 +34,7 @@ Scheduler 是 SGLang Runtime 的**核心大脑**，负责：
         ┌──────┴──────┐
         ▼             ▼
 ┌───────────┐  ┌─────────────┐
-│ RadixCache│  │Model Runner │
+│ PrefixCache*│ │Model Runner │
 └───────────┘  └─────────────┘
 ```
 
@@ -80,8 +80,22 @@ self.enable_pdmux                   # PD 多路复用
 self.max_total_num_tokens           # 最大 token 数
 self.max_running_requests           # 最大并发请求
 self.page_size                      # KV Cache 页大小
-self.tree_cache: RadixCache         # RadixAttention 前缀树
+self.tree_cache: BasePrefixCache    # 可插拔前缀缓存 (Radix/Chunk/HiRadix/LMCache...)
 ```
+
+
+### 2.3 勘误：`tree_cache` 是可插拔实现
+
+`Scheduler.init_cache_with_memory_pool()` 会按配置选择不同实现，而不是固定 `RadixCache`：
+- `ChunkCache` / `SWAChunkCache`
+- `RadixCacheCpp`
+- `HiRadixCache`
+- `SWARadixCache`
+- `MambaRadixCache`
+- `LMCRadixCache`
+- `RadixCache`（默认兜底）
+
+因此文中凡出现“Scheduler = RadixCache”的地方，应理解为“Scheduler 持有前缀缓存抽象实例”。
 
 ---
 

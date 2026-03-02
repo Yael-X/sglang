@@ -108,6 +108,19 @@ class DeepEPLLDispatchOutput(NamedTuple):
         return DispatchOutputFormat.DEEPEP_LL
 ```
 
+
+### 3.3 运行时模式切换（代码对齐）
+
+DeepEP 不是只在初始化时确定模式。运行时可以通过：
+
+```python
+DeepEPBuffer.set_dispatch_mode(mode)
+# mode.is_low_latency() -> set_dispatch_mode_as_low_latency()
+# mode.is_normal()      -> set_dispatch_mode_as_normal()
+```
+
+在进入 Low Latency 前会清理 Normal 模式缓冲区，避免模式切换后的缓冲不一致。
+
 ---
 
 ## 四、Dispatch 流程

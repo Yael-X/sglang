@@ -120,6 +120,14 @@ def initialize(self, min_per_gpu_memory: float):
         self.cuda_graph_runner = CudaGraphRunner(self)
 ```
 
+### 3.3 CUDA Graph 路径补充（代码对齐）
+
+- 初始化首先创建 `TorchMemorySaverAdapter`，用于显存保护与回收策略协同。
+- 标准图执行会创建图 runner（GPU 对应 `CudaGraphRunner`，CPU/NPU 分别对应专用 runner）。
+- 若 `enable_piecewise_cuda_graph` 打开且模型结构满足约束，还会额外初始化 `PiecewiseCudaGraphRunner`。
+
+> 这里更准确的理解是“标准图执行路径 + 可选分段图执行增强”，而非固定单一路径。
+
 ---
 
 ## 四、模型加载

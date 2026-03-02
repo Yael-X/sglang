@@ -21,7 +21,7 @@ classDiagram
         +dp_size: int
         +server_args: ServerArgs
         +model_config: ModelConfig
-        +tree_cache: RadixCache
+        +tree_cache: BasePrefixCache
         +waiting_queue: List[Req]
         +running_batch: ScheduleBatch
         +event_loop_overlap()
@@ -192,6 +192,13 @@ def __init__(self, server_args, port_args, gpu_id, tp_rank, moe_ep_rank, pp_rank
     self.is_initializing = False
 ```
 
+
+## 二点五、勘误：`tree_cache` 并非固定 `RadixCache`
+
+`init_cache_with_memory_pool()` 会根据运行参数动态选择缓存实现（Chunk/RadixCpp/HiRadix/SWA/Mamba/LMCache/默认 Radix）。
+
+这意味着 Scheduler 依赖的是“前缀缓存能力接口”，而不是单一类名。阅读源码时建议从初始化分支入手，而不是假设固定实现。
+
 ---
 
 ## 三、事件循环深度解析
@@ -342,7 +349,7 @@ classDiagram
     
     class PrefillAdder {
         +waiting_queue: List[Req]
-        +tree_cache: RadixCache
+        +tree_cache: BasePrefixCache
         +policy: SchedulePolicy
         +add_req()
         +select_reqs()
